@@ -8,14 +8,14 @@
         * {margin: 0; padding: 0; box-sizing: border-box;}
         body {overflow: hidden; background: #ffffff;}
         canvas {width: 100vw; height: 100vh; display: block;}
-        /* 半透明按钮，不影响画面 */
-        #audioTrigger {
+        /* 全屏透明触发层，微信用户点任意位置都能触发 */
+        #playTrigger {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0,0,0,0.01); /* 几乎透明 */
+            background: transparent;
             border: none;
             z-index: 9999;
             font-size: 16px;
@@ -25,11 +25,10 @@
     </style>
 </head>
 <body>
-<!-- 全屏触发按钮，微信用户点任意位置即可播放 -->
-<button id="audioTrigger">点击任意位置开启音乐</button>
+<button id="playTrigger">点击任意位置开启音乐</button>
 <canvas id="heartCanvas"></canvas>
 
-<!-- 预加载音频，循环播放 -->
+<!-- 音频预加载，循环播放 -->
 <audio id="bgm" loop preload="auto">
     <source src="bgm.mp3" type="audio/mpeg">
 
@@ -37,20 +36,21 @@
 <script>
 const canvas = document.getElementById('heartCanvas');
 const ctx = canvas.getContext('2d');
-const audioTrigger = document.getElementById('audioTrigger');
+const playTrigger = document.getElementById('playTrigger');
 const bgm = document.getElementById('bgm');
 
 let audioStarted = false;
 
 // 点击后播放音乐，隐藏按钮
-audioTrigger.addEventListener('click', () => {
+playTrigger.addEventListener('click', () => {
     if (!audioStarted) {
         bgm.volume = 0.6;
         bgm.play().then(() => {
-            audioTrigger.style.display = 'none';
+            playTrigger.style.display = 'none';
             audioStarted = true;
         }).catch((err) => {
             console.error("播放失败:", err);
+            alert("音乐加载失败，请刷新页面重试");
         });
     }
 });

@@ -8,31 +8,52 @@
         * {margin: 0; padding: 0; box-sizing: border-box;}
         body {overflow: hidden; background: #ffffff;}
         canvas {width: 100vw; height: 100vh; display: block;}
+        /* 半透明按钮，不影响画面 */
+        #audioTrigger {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.01); /* 几乎透明 */
+            border: none;
+            z-index: 9999;
+            font-size: 16px;
+            color: #FF5078;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+<!-- 全屏触发按钮，微信用户点任意位置即可播放 -->
+<button id="audioTrigger">点击任意位置开启音乐</button>
 <canvas id="heartCanvas"></canvas>
 
-<!-- 自动播放背景音乐 -->
-<audio id="bgm" loop autoplay muted preload="auto">
+<!-- 预加载音频，循环播放 -->
+<audio id="bgm" loop preload="auto">
     <source src="bgm.mp3" type="audio/mpeg">
 
 
 <script>
 const canvas = document.getElementById('heartCanvas');
 const ctx = canvas.getContext('2d');
+const audioTrigger = document.getElementById('audioTrigger');
 const bgm = document.getElementById('bgm');
 
-// 解决微信自动播放静音限制，页面加载完恢复音量
-window.addEventListener('touchstart',()=>{
-    bgm.muted = false;
-    bgm.volume = 0.5;
-}, {once:true})
+let audioStarted = false;
 
-window.addEventListener('mousedown',()=>{
-    bgm.muted = false;
-    bgm.volume = 0.5;
-}, {once:true})
+// 点击后播放音乐，隐藏按钮
+audioTrigger.addEventListener('click', () => {
+    if (!audioStarted) {
+        bgm.volume = 0.6;
+        bgm.play().then(() => {
+            audioTrigger.style.display = 'none';
+            audioStarted = true;
+        }).catch((err) => {
+            console.error("播放失败:", err);
+        });
+    }
+});
 
 let W = innerWidth;
 let H = innerHeight;
@@ -48,7 +69,7 @@ const CX = W / 2;
 const CY = H / 2;
 
 const words = [
-    "", "好好吃饭", "多喝热水", "毕业快乐", "好好爱自己",
+    "", "好好吃饭", "多喝热水", "我想你了", "好好爱自己",
     "别熬夜", "天冷加衣", "顺顺利利", "要开心哦", "万事胜意",
     "平安喜乐", "岁岁年年", "心想事成", "天天开心", "你超棒的"
 ];

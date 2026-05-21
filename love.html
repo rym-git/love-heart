@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>暖心爱心漂浮文字</title>
+    <style>
+        * {margin: 0; padding: 0; box-sizing: border-box;}
+        body {overflow: hidden; background: #ffffff;}
+        canvas {width: 100vw; height: 100vh; display: block;}
+    </style>
+</head>
+<body>
+<canvas id="heartCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('heartCanvas');
+const ctx = canvas.getContext('2d');
+let W = innerWidth;
+let H = innerHeight;
+canvas.width = W;
+canvas.height = H;
+
+const LABEL_COUNT = 350;
+const FORM_TIME = 4000;
+const MOVE_SPEED = 50;
+const TURN = 1.8;
+const HEART_SCALE = Math.min(W, H) * 0.5 / 22;
+const CX = W / 2;
+const CY = H / 2;
+
+const words = [
+    "", "好好吃饭", "多喝热水", "我想你了", "好好爱自己",
+    "别熬夜", "天冷加衣", "顺顺利利", "要开心哦", "万事胜意",
+    "平安喜乐", "岁岁年年", "心想事成", "天天开心", "你超棒的"
+];
+const colorList = [
+    "#FF5078","#FF6482","#FF7896","#FF8CAA",
+    "#FFA0BE","#FFB4D2","#FFC8E6"
+];
+
+function getHeartPos(t, scale, x0, y0){
+    let x = 16 * Math.sin(t) ** 3;
+    let y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+    return {x: x0 + x * scale, y: y0 - y * scale};
+}
+
+let particle = [];
+for(let i = 0; i < LABEL_COUNT; i++){
+    let t = (i / LABEL_COUNT) * Math.PI * 2;
+    let pos = getHeartPos(t, HEART_SCALE, CX, CY);
+    particle.push({
+        text: words[Math.floor(Math.random() * words.length)],
+        color: colorList[Math.floor(Math.random() * colorList.length)],
+        size: 14 + Math.floor(Math.random() * 11),
+        x: pos.x, y: pos.y,
+        vx: 0, vy: 0,
+        show: false
+    });
+}
+
+let avgX = particle.reduce((sum, p) => sum + p.x, 0) / particle.length;
+particle.forEach(p => p.x += CX - avgX);
+
+let startStamp = performance.now();
+let startSwim = false;
+
+function setSpeed(){
+    particle.forEach(p => {
+        let angle = Math.random() * Math.PI * 2;
+        let spd = (0.6 + Math.random() * 0.8) * MOVE_SPEED;
+        p.vx = Math.cos(angle) * spd;
+        p.vy = Math.sin(angle) * spd;
+    });
+    startSwim = true;
+}
+
+function animate(time){
+    let runTime = time - startStamp;
+
+    if(runTime < FORM_TIME){
+        let rate = runTime / FORM_TIME;
+        let showNum = Math.floor(rate * LABEL_COUNT);
+        for(let i = 0; i < LABEL_COUNT; i++){
+            particle[i].show = i < showNum;
+        }
+    }else{
+        if(!startSwim) setSpeed();
+    }
+
+    if(startSwim){
+        let dt = 1 / 60;
+        particle.forEach(p => {
+            if(Math.random() < 0.05){
+                let spd = Math.hypot(p.vx, p.vy);
+                if(spd > 0.1){
+                    let ang = Math.atan2(p.vy, p.vx);
+                    ang += (Math.random() - 0.5) * 2 * TURN;
+                    p.vx = Math.cos(ang) * spd;
+                    p.vy = Math.sin(ang) * spd;
+                }
+            }
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            if(p.x <= 0) {p.x = 0; p.vx = Math.abs(p.vx) * 0.9;}
+            if(p.x >= W) {p.x = W; p.vx = -Math.abs(p.vx) * 0.9;}
+            if(p.y <= 0) {p.y = 0; p.vy = Math.abs(p.vy) * 0.9;}
+            if(p.y >= H) {p.y = H; p.vy = -Math.abs(p.vy) * 0.9;}
+        });
+    }
+
+    ctx.clearRect(0,0,W,H);
+    particle.forEach(p => {
+        if(!p.show) return;
+        ctx.fillStyle = p.color;
+        ctx.font = `${p.size}px "微软雅黑",sans-serif`;
+        ctx.textAlign = "center";
+        ctx.fillText(p.text, p.x, p.y);
+    });
+
+    requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+window.addEventListener('resize',()=>{
+    W = innerWidth;
+    H = innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+});
+</script>
+</body>
+</html>
